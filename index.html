@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="警途AI">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<title>警途AI - 你的公安联考四年陪跑教练</title>
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --card2: #16213e;
+  --accent: #e94560;
+  --accent2: #0f3460;
+  --gold: #f0a500;
+  --green: #00b894;
+  --text: #eaeaea;
+  --text2: #a0a0b8;
+  --border: #2a2a44;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,.4);
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding-bottom: calc(80px + var(--safe-bottom));
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+/* ── Top Bar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; background: rgba(15,15,26,.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+.topbar h1 span { color: var(--accent); }
+.streak-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card2); padding: 6px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+}
+.streak-badge .fire { font-size: 16px; }
+/* ── Page Container ── */
+.page { display: none; padding: 16px 20px 24px; animation: fadeIn .3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* ── Cards ── */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 14px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title .icon { font-size: 18px; }
+/* ── Module Progress ── */
+.modules { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.module-tile {
+  background: var(--card2); border-radius: 14px; padding: 14px;
+  border: 1px solid var(--border); position: relative; overflow: hidden;
+}
+.module-tile .mod-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.module-tile .mod-sub { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+.module-tile .mod-bar {
+  height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.module-tile .mod-fill {
+  height: 100%; border-radius: 2px; transition: width .5s ease;
+}
+.mod-fill.shenlun { background: var(--accent); }
+.mod-fill.english { background: #6c5ce7; }
+.mod-fill.fitness { background: var(--green); }
+.mod-fill.major  { background: #0984e3; }
+.mod-fill.discipline { background: var(--gold); }
+/* ── Time Ring ── */
+.time-ring-wrap { display: flex; align-items: center; gap: 16px; }
+.time-ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--pct) * 3.6deg), var(--border) 0);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; flex-shrink: 0;
+}
+.time-ring::after {
+  content: ''; width: 60px; height: 60px; border-radius: 50%;
+  background: var(--card); position: absolute;
+}
+.time-ring-val {
+  position: relative; z-index: 1; font-size: 18px; font-weight: 800;
+  text-align: center;
+}
+.time-ring-val small { display: block; font-size: 10px; color: var(--text2); font-weight: 400; }
+.time-detail { font-size: 13px; line-height: 1.8; color: var(--text2); }
+.time-detail strong { color: var(--text); }
+/* ── AI Chat ── */
+.chat-container {
+  display: flex; flex-direction: column; height: calc(100vh - 200px);
+}
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 4px 0;
+  display: flex; flex-direction: column; gap: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.msg {
+  max-width: 85%; padding: 10px 14px; border-radius: 16px;
+  font-size: 13.5px; line-height: 1.65; word-break: break-word;
+}
+.msg.user {
+  align-self: flex-end; background: var(--accent);
+  border-bottom-right-radius: 4px; color: #fff;
+}
+.msg.ai {
+  align-self: flex-start; background: var(--card2);
+  border-bottom-left-radius: 4px;
+}
+.msg.ai .think {
+  font-size: 11px; color: var(--text2); font-style: italic;
+  background: rgba(255,255,255,.03); padding: 6px 8px; border-radius: 8px;
+  margin-top: 6px; border-left: 2px solid var(--accent2);
+}
+.chat-input-wrap {
+  display: flex; gap: 8px; padding: 12px 0 0;
+  border-top: 1px solid var(--border); margin-top: 8px;
+}
+.chat-input-wrap input {
+  flex: 1; background: var(--card2); border: 1px solid var(--border);
+  border-radius: 24px; padding: 10px 16px; color: var(--text);
+  font-size: 14px; outline: none;
+}
+.chat-input-wrap input:focus { border-color: var(--accent); }
+.chat-input-wrap button {
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: var(--accent); color: #fff; font-size: 18px;
+  cursor: pointer; flex-shrink: 0;
+}
+.chat-input-wrap button:active { opacity: .8; }
+.chat-placeholder {
+  text-align: center; color: var(--text2); font-size: 13px; padding: 24px;
+}
+.chat-placeholder .quick-btns {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: center;
+}
+.quick-btn {
+  background: var(--card2); border: 1px solid var(--border);
+  padding: 8px 14px; border-radius: 20px; font-size: 12px; color: var(--text);
+  cursor: pointer; white-space: nowrap;
+}
+.quick-btn:active { background: var(--accent2); border-color: var(--accent); }
+/* ── Daily Checklist ── */
+.checklist { display: flex; flex-direction: column; gap: 8px; }
+.check-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--card2); border-radius: 12px;
+  border: 1px solid var(--border); cursor: pointer; transition: all .2s;
+}
+.check-item.done { opacity: .6; border-color: var(--green); }
+.check-item .check-box {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all .2s;
+}
+.check-item.done .check-box {
+  background: var(--green); border-color: var(--green); color: #fff;
+}
+.check-item .check-info { flex: 1; }
+.check-item .check-name { font-size: 14px; font-weight: 600; }
+.check-item .check-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.check-item .check-time { font-size: 12px; color: var(--text2); }
+/* ── Weekly Review ── */
+.review-form { display: flex; flex-direction: column; gap: 12px; }
+.review-form label { font-size: 13px; font-weight: 600; color: var(--text2); }
+.review-form textarea {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; color: var(--text);
+  font-size: 13px; resize: vertical; min-height: 60px; outline: none;
+  font-family: inherit;
+}
+.review-form textarea:focus { border-color: var(--accent); }
+.review-form .btn-row { display: flex; gap: 8px; }
+.btn {
+  padding: 10px 20px; border-radius: 12px; border: none; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+.btn:active { opacity: .8; transform: scale(.97); }
+.review-history { margin-top: 16px; }
+.review-entry {
+  background: var(--card2); border-radius: 12px; padding: 14px;
+  margin-bottom: 10px; border: 1px solid var(--border);
+}
+.review-entry .rev-date { font-size: 12px; color: var(--accent); font-weight: 600; }
+.review-entry .rev-text { font-size: 12.5px; color: var(--text2); margin-top: 6px; line-height: 1.6; }
+/* ── Progress / Stats ── */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-box {
+  background: var(--card2); border-radius: 14px; padding: 14px;
+  text-align: center; border: 1px solid var(--border);
+}
+.stat-box .stat-num { font-size: 28px; font-weight: 800; }
+.stat-box .stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; }
+.stat-box.accent .stat-num { color: var(--accent); }
+.stat-box.gold .stat-num { color: var(--gold); }
+.stat-box.green .stat-num { color: var(--green); }
+/* ── Settings ── */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.setting-row .set-label { font-size: 14px; }
+.setting-row .set-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.setting-row input[type="text"] {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; color: var(--text);
+  font-size: 13px; width: 160px; outline: none;
+}
+/* ── Bottom Nav ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  display: flex; background: rgba(15,15,26,.95);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 var(--safe-bottom);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 2px; cursor: pointer; padding: 4px 0; color: var(--text2);
+  font-size: 10px; transition: color .2s;
+}
+.nav-item .nav-icon { font-size: 20px; margin-bottom: 1px; }
+.nav-item.active { color: var(--accent); }
+/* ── Toast ── */
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #fff; padding: 10px 20px;
+  border-radius: 24px; font-size: 13px; font-weight: 600;
+  z-index: 999; opacity: 0; transition: opacity .3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+/* ── Typing Indicator ── */
+.typing { display: flex; gap: 4px; padding: 8px 14px; }
+.typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text2);
+  animation: bounce 1.2s infinite;
+}
+.typing span:nth-child(2) { animation-delay: .15s; }
+.typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+/* ── Reminder Banner ── */
+.reminder-banner {
+  position: fixed; top: 52px; left: 0; right: 0; z-index: 99;
+  background: linear-gradient(135deg, var(--accent), #c0392b);
+  color: #fff; padding: 10px 16px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+  transform: translateY(-100%); transition: transform .3s ease;
+}
+.reminder-banner.show { transform: translateY(0); }
+.reminder-banner .rem-close {
+  background: rgba(255,255,255,.2); border: none; color: #fff;
+  width: 24px; height: 24px; border-radius: 50%; font-size: 14px;
+  cursor: pointer; flex-shrink: 0; margin-left: 10px;
+}
+/* ── Notification Prompt ── */
+.notify-prompt {
+  position: fixed; bottom: 100px; left: 20px; right: 20px; z-index: 150;
+  background: var(--card); border: 1px solid var(--gold); border-radius: 16px;
+  padding: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+  display: flex; align-items: center; gap: 12px;
+  animation: slideUp .4s ease;
+}
+@keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.notify-prompt .np-icon { font-size: 32px; flex-shrink: 0; }
+.notify-prompt .np-text { flex: 1; font-size: 13px; line-height: 1.5; }
+.notify-prompt .np-text strong { color: var(--gold); }
+.notify-prompt .np-btns { display: flex; gap: 6px; margin-top: 8px; }
+.notify-prompt .np-btn {
+  padding: 6px 14px; border-radius: 16px; border: none; font-size: 12px;
+  font-weight: 600; cursor: pointer;
+}
+.np-btn-allow { background: var(--gold); color: #000; }
+.np-btn-later { background: var(--card2); color: var(--text2); border: 1px solid var(--border); }
+/* ── Knowledge Base ── */
+.kb-search { 
+  width: 100%; background: var(--card2); border: 1px solid var(--border);
+  border-radius: 24px; padding: 10px 16px; color: var(--text);
+  font-size: 14px; outline: none; margin-bottom: 14px;
+}
+.kb-search:focus { border-color: var(--gold); }
+.kb-topic {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+}
+.kb-topic-header {
+  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; font-weight: 600; font-size: 14px;
+}
+.kb-topic-header .kb-arrow { transition: transform .3s; font-size: 12px; color: var(--text2); }
+.kb-topic.open .kb-arrow { transform: rotate(180deg); }
+.kb-topic-body {
+  max-height: 0; overflow: hidden; transition: max-height .4s ease;
+  padding: 0 16px; font-size: 13px; color: var(--text2); line-height: 1.8;
+}
+.kb-topic.open .kb-topic-body { max-height: 40000px; padding-bottom: 14px; }
+.kb-topic-body .kb-card {
+  background: var(--card2); border-radius: 10px;
+  margin-bottom: 8px; border-left: 3px solid var(--accent); overflow: hidden;
+}
+.kb-topic-body .kb-card.gold { border-left-color: var(--gold); }
+.kb-topic-body .kb-card.green { border-left-color: var(--green); }
+.kb-topic-body .kb-card.blue { border-left-color: #0984e3; }
+.kb-card-title {
+  padding: 10px 12px; font-weight: 600; font-size: 13px; color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; user-select: none;
+}
+.kb-card-title .kb-card-arrow { font-size: 10px; color: var(--text2); transition: transform .3s; flex-shrink: 0; }
+.kb-card.open .kb-card-arrow { transform: rotate(180deg); }
+.kb-card-body {
+  max-height: 0; overflow: hidden; transition: max-height .4s ease;
+  font-size: 12.5px; color: var(--text2); line-height: 1.7;
+}
+.kb-card.open .kb-card-body { max-height: 6000px; }
+.kb-card-body-inner { padding: 0 12px 12px; }
+.kb-card-body table {
+  width: 100%; border-collapse: collapse; margin: 8px 0;
+  font-size: 11.5px; line-height: 1.6;
+}
+.kb-card-body table th, .kb-card-body table td {
+  border: 1px solid var(--border); padding: 5px 7px; text-align: left;
+}
+.kb-card-body table th { background: rgba(255,255,255,.04); color: var(--text); font-weight: 600; }
+.kb-card-body pre {
+  background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; overflow-x: auto; font-size: 11px; line-height: 1.6;
+  margin: 8px 0; white-space: pre-wrap; font-family: inherit;
+}
+.kb-card-body code { background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+.kb-card-body pre code { background: none; padding: 0; }
+.kb-card-body p { margin: 6px 0; }
+.kb-card-body ul, .kb-card-body ol { padding-left: 18px; margin: 6px 0; }
+.kb-card-body li { margin: 3px 0; }
+.kb-card-body strong { color: var(--text); }
+.kb-card-body blockquote {
+  border-left: 3px solid var(--accent2); padding: 6px 10px;
+  background: rgba(255,255,255,.03); border-radius: 6px; margin: 8px 0;
+}
+.kb-tag {
+  display: inline-block; background: rgba(233,69,96,.15); color: var(--accent);
+  padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px; margin-bottom: 4px;
+}
+/* ── Daily News ── */
+.daily-card { border-left: 3px solid var(--gold); }
+.daily-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; cursor: pointer;
+}
+.daily-header .daily-title { font-size: 15px; font-weight: 700; }
+.daily-header .daily-date { font-size: 11px; color: var(--text2); }
+.daily-item {
+  background: var(--card2); border-radius: 10px; margin-bottom: 8px;
+  padding: 10px 12px; border: 1px solid var(--border);
+}
+.daily-item-head {
+  display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
+}
+.daily-item-tag {
+  flex-shrink: 0; background: rgba(240,165,0,.15); color: var(--gold);
+  padding: 1px 6px; border-radius: 6px; font-size: 10px; margin-top: 2px;
+}
+.daily-item-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.5; flex: 1; }
+.daily-item-body { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+.daily-item.open .daily-item-body { max-height: 800px; }
+.daily-item-body-inner { padding-top: 8px; font-size: 12px; color: var(--text2); line-height: 1.7; }
+.daily-item-body-inner .dline { margin: 5px 0; }
+.daily-item-body-inner .dlabel { color: var(--gold); font-weight: 600; }
+.daily-item-body-inner .dlabel.sec { color: #0984e3; }
+.daily-empty { font-size: 12px; color: var(--text2); text-align: center; padding: 10px; }
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>🚔 警<span>途</span>AI</h1>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="streak-badge" id="streakBadge" style="cursor:pointer" onclick="switchTab('stats')">
+      <span class="fire">🔥</span><span id="streakDays">0</span>天
+    </div>
+    <div style="font-size:20px;cursor:pointer;padding:4px" onclick="switchTab('settings')">⚙️</div>
+  </div>
+</div>
+
+<!-- Reminder Banner -->
+<div class="reminder-banner" id="reminderBanner">
+  <span id="reminderText">⏰ 今日还有 5 项待完成</span>
+  <button class="rem-close" onclick="dismissReminder()">✕</button>
+</div>
+
+<!-- ════════ PAGES ════════ -->
+
+<!-- PAGE 1: 首页 Dashboard -->
+<div class="page active" id="page-home">
+  <!-- 今日时政 -->
+  <div class="card daily-card">
+    <div class="daily-header" onclick="toggleDaily()">
+      <div>
+        <div class="daily-title">📰 今日时政</div>
+        <div class="daily-date" id="dailyDate">加载中...</div>
+      </div>
+      <span style="color:var(--text2);font-size:12px" id="dailyArrow">▼</span>
+    </div>
+    <div id="dailyItems"><div class="daily-empty">正在加载今日时政简报...</div></div>
+  </div>
+
+  <!-- 时间环 -->
+  <div class="card">
+    <div class="time-ring-wrap">
+      <div class="time-ring" style="--pct:0" id="timeRing">
+        <div class="time-ring-val"><span id="ringHours">0</span><small>h / 7h</small></div>
+      </div>
+      <div class="time-detail" id="timeDetail">
+        本周投入 <strong>0h</strong> / 7h 目标<br>
+        今日完成 <strong id="todayDone">0</strong> / <strong id="todayTotal">5</strong> 项
+      </div>
+    </div>
+  </div>
+
+  <!-- 五大模块 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span>五大模块进度（本周）</div>
+    <div class="modules" id="moduleTiles">
+      <!-- dynamically filled -->
+    </div>
+  </div>
+
+  <!-- 快捷入口 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚡</span>快捷操作</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="module-tile" onclick="switchTab('chat')" style="cursor:pointer">
+        <div class="mod-name">💬 问AI导师</div>
+        <div class="mod-sub">遇到困惑随时聊</div>
+      </div>
+      <div class="module-tile" onclick="switchTab('checklist')" style="cursor:pointer">
+        <div class="mod-name">✅ 今日打卡</div>
+        <div class="mod-sub">完成每日任务</div>
+      </div>
+      <div class="module-tile" onclick="switchTab('review')" style="cursor:pointer">
+        <div class="mod-name">📝 周复盘</div>
+        <div class="mod-sub">每周日晚30分钟</div>
+      </div>
+      <div class="module-tile" onclick="switchTab('stats')" style="cursor:pointer">
+        <div class="mod-name">📈 数据看板</div>
+        <div class="mod-sub">累计投入统计</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: AI导师 -->
+<div class="page" id="page-chat">
+  <div class="card" style="margin-bottom:8px">
+    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+      🤖 <strong>AI导师已加载你的完整规划</strong>——包括公安联考目标、五大模块、7h/周约束。随时提问。
+    </div>
+  </div>
+  <div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-placeholder" id="chatPlaceholder">
+        <div style="font-size:32px;margin-bottom:8px">👮</div>
+        我是你的警途AI导师<br>已了解你的全部规划，随时问我
+        <div class="quick-btns">
+          <div class="quick-btn" onclick="sendQuick('今天我有点懒，不想学习怎么办？')">😴 不想学习</div>
+          <div class="quick-btn" onclick="sendQuick('申论基础怎么练最有效？')">📝 申论疑问</div>
+          <div class="quick-btn" onclick="sendQuick('警校体能训练有什么技巧？')">💪 体能技巧</div>
+          <div class="quick-btn" onclick="sendQuick('帮我回顾一下这周的进展')">📊 本周复盘</div>
+          <div class="quick-btn" onclick="sendQuick('我对警务化管理感到不适应，怎么办？')">🏫 适应警校</div>
+          <div class="quick-btn" onclick="sendQuick('CET-4 怎么利用零碎时间备考？')">🇬🇧 四级备考</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-wrap">
+      <input type="text" id="chatInput" placeholder="输入你的问题..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: 每日打卡 -->
+<div class="page" id="page-checklist">
+  <div class="card">
+    <div class="card-title"><span class="icon">✅</span>今日打卡 <span id="checkDate" style="font-weight:400;font-size:12px;color:var(--text2)"></span></div>
+    <div class="checklist" id="checklistContainer"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">📝</span>今日小结（一句话）</div>
+    <textarea id="dailyNote" placeholder="今天最想记住的一件事..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-size:13px;resize:none;min-height:50px;outline:none;font-family:inherit" oninput="saveDailyNote()"></textarea>
+  </div>
+</div>
+
+<!-- PAGE 4: 周复盘 -->
+<div class="page" id="page-review">
+  <div class="card">
+    <div class="card-title"><span class="icon">📝</span>本周复盘（建议每周日晚完成）</div>
+    <div class="review-form">
+      <label>1️⃣ 这周7小时用在了哪里？（实际vs计划）</label>
+      <textarea id="revQ1" placeholder="申论 __h / 英语 __h / 体能 __h / 专业课 __h / 复盘 __h"></textarea>
+      <label>2️⃣ 哪件事没做到？原因是什么？</label>
+      <textarea id="revQ2" placeholder="客观分析，不是自我批评..."></textarea>
+      <label>3️⃣ 下周调整什么？（最多3件事）</label>
+      <textarea id="revQ3" placeholder="具体可执行的调整..."></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveReview()">💾 保存复盘</button>
+        <button class="btn btn-secondary" onclick="clearReview()">清空</button>
+      </div>
+    </div>
+  </div>
+  <div class="review-history" id="reviewHistory"></div>
+</div>
+
+<!-- PAGE 5: 进度统计 -->
+<div class="page" id="page-stats">
+  <div class="stat-row">
+    <div class="stat-box accent"><div class="stat-num" id="statStreak">0</div><div class="stat-label">🔥 连续打卡</div></div>
+    <div class="stat-box gold"><div class="stat-num" id="statTotalH">0</div><div class="stat-label">⏱️ 累计投入(时)</div></div>
+    <div class="stat-box green"><div class="stat-num" id="statTasks">0</div><div class="stat-label">✅ 完成任务</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span>各模块累计投入</div>
+    <div id="moduleStats" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">📅</span>近7天打卡热力图</div>
+    <div id="heatmap" style="display:flex;gap:6px;justify-content:center"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">🗂️</span>数据管理</div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="exportData()">📤 导出数据</button>
+      <button class="btn btn-secondary" onclick="importDataPrompt()">📥 导入数据</button>
+      <button class="btn btn-secondary" onclick="resetAll()" style="color:var(--accent)">⚠️ 重置全部</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 6: 设置 -->
+<div class="page" id="page-settings">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span>AI 配置</div>
+    <div class="setting-row">
+      <div>
+        <div class="set-label">API 提供商</div>
+        <div class="set-desc">DeepSeek 国内可直接访问</div>
+      </div>
+      <select id="apiProvider" onchange="saveSettings()" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:13px">
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">OpenAI</option>
+        <option value="custom">自定义</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="set-label">API Key</div>
+        <div class="set-desc" id="apiKeyHint">在 platform.deepseek.com 获取</div>
+      </div>
+      <input type="password" id="apiKey" placeholder="sk-..." oninput="saveSettings()">
+    </div>
+    <div class="setting-row" id="customUrlRow" style="display:none">
+      <div>
+        <div class="set-label">自定义 API URL</div>
+      </div>
+      <input type="text" id="customApiUrl" placeholder="https://..." oninput="saveSettings()">
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="set-label">模型</div>
+      </div>
+      <select id="apiModel" onchange="saveSettings()" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:13px">
+        <option value="deepseek-chat">deepseek-chat</option>
+        <option value="deepseek-reasoner">deepseek-reasoner (R1)</option>
+      </select>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text2);line-height:1.6">
+      💡 <strong>DeepSeek 注册即送免费额度</strong>，国内可直接使用。<br>
+      API Key 仅存储在你的手机本地，不会上传到任何服务器。
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">📖</span>关于警途AI</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      <strong>专为大一的你打造</strong><br>
+      锚定公安联考 | 五大模块陪伴 | AI导师随时在线<br><br>
+      治安学专业 · 四年规划 · 7h/周<br>
+      申论 / CET-4 / 体能 / 专业课 / 自律
+    </div>
+  </div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addToHomeScreen()">📲 添加到手机主屏幕</button>
+</div>
+
+<!-- PAGE 7: 知识库 -->
+<div class="page" id="page-knowledge">
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+      📚 <strong>已加载四大知识模块</strong>——教育十五五、申论渐进训练、广东经济数据、AI提示词。可搜索、可展开。
+    </div>
+  </div>
+  <input type="text" class="kb-search" id="kbSearch" placeholder="🔍 搜索知识点..." oninput="filterKnowledge()">
+  <div id="kbTopics"></div>
+</div>
+
+<!-- ════════ BOTTOM NAV ════════ -->
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" data-page="home" onclick="switchTab('home')">
+    <div class="nav-icon">🏠</div>首页
+  </div>
+  <div class="nav-item" data-page="chat" onclick="switchTab('chat')">
+    <div class="nav-icon">💬</div>AI导师
+  </div>
+  <div class="nav-item" data-page="checklist" onclick="switchTab('checklist')">
+    <div class="nav-icon">✅</div>打卡
+  </div>
+  <div class="nav-item" data-page="review" onclick="switchTab('review')">
+    <div class="nav-icon">📝</div>复盘
+  </div>
+  <div class="nav-item" data-page="knowledge" onclick="switchTab('knowledge')">
+    <div class="nav-icon">📚</div>知识库
+  </div>
+  <div class="nav-item" data-page="stats" onclick="switchTab('stats')">
+    <div class="nav-icon">📊</div>数据
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════ DATA MODEL ═══════════════════
+const DEFAULT_DATA = {
+  streak: 0,
+  lastCheckDate: '',
+  totalCompleted: 0,
+  totalHours: 0,
+  // module hours: { shenlun, english, fitness, major, discipline }
+  moduleHours: { shenlun: 0, english: 0, fitness: 0, major: 0, discipline: 0 },
+  // daily checklist: { date: { items: {id: bool}, note: str } }
+  dailyLog: {},
+  // weekly reviews: [ { date, q1, q2, q3 } ]
+  reviews: [],
+  // settings
+  settings: {
+    apiProvider: 'deepseek',
+    apiKey: '',
+    apiModel: 'deepseek-chat',
+    customApiUrl: ''
+  }
+};
+
+const MODULES = [
+  { id: 'shenlun',   name: '📝 申论基础',  sub: '读评+写作', cls: 'shenlun',   goal: 2 },
+  { id: 'english',   name: '🇬🇧 英语四级',  sub: '单词+阅读', cls: 'english',   goal: 2 },
+  { id: 'fitness',   name: '💪 体能强化',  sub: '跑步+力量', cls: 'fitness',   goal: 1.5 },
+  { id: 'major',     name: '📚 专业沉淀',  sub: '导图+拓展', cls: 'major',     goal: 1 },
+  { id: 'discipline',name: '🎯 自律复盘',  sub: '计划+追踪', cls: 'discipline',goal: 0.5 }
+];
+
+const DAILY_ITEMS = [
+  { id: 'shenlun_read', name: '读人民日报评论', desc: '15分钟，口头复述核心观点', module: 'shenlun', time: '15min' },
+  { id: 'english_words', name: '背四级+考研词汇', desc: '30-40个，服务四级+考研英语一', module: 'english', time: '20min' },
+  { id: 'fitness_push', name: '额外体能训练', desc: '跑操/体训课不摸鱼，引体向上+核心', module: 'fitness', time: '10min' },
+  { id: 'major_review', name: '课堂总结+精学1个法学/公安概念', desc: '当天课3句话总结，再记1个核心概念', module: 'major', time: '15min' },
+  { id: 'discipline_log', name: '记录今日时间去向', desc: '睡前记一句+复盘时间去向', module: 'discipline', time: '5min' }
+];
+
+// ═══════════════ STATE ═══════════════
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let currentTab = 'home';
+
+// ═══════════════ DAILY NEWS ═══════════════
+const DAILY_NEWS_FALLBACK = {
+  date: '2026-08-24',
+  updated: '2026-08-24 20:00',
+  items: [
+    { source: '人民网/公安部', tag: '数据安全', title: '《网络数据安全风险评估办法》8月20日起施行', summary: '规范网络数据安全风险评估，完善数据安全管理机制，以数据安全保障开发利用和产业发展。', shenlun: '论点：统筹发展与安全，筑牢数据安全底线。对策：健全风险评估机制、压实主体责任、强化分级分类管理。', security: '与网络安全警察、数据执法直接相关，是治安/网安岗位必考和实务热点。' },
+    { source: '公安部网安局', tag: '专项行动', title: "公安机关'净网—2026'严打涉灾网络谣言，公布4起典型案例", summary: "网安部门依托'净网—2026'专项行动，持续打击编造传播涉灾网络谣言，净化网络空间。", shenlun: '论点：依法治理网络谣言，营造清朗网络空间。对策：强化平台审核责任、加大惩处力度、提升公众媒介素养。', security: '网络谣言治理是基层治安维稳常见场景，也是联考申论"社会治理+网络空间"典型素材。' },
+    { source: '新华社/法治日报', tag: '扫黑除恶', title: '深化扫黑除恶第一轮集中收网：打掉团伙1000余个、抓获8200余人', summary: '开展深化扫黑除恶专项斗争第一轮集中收网，打掉犯罪团伙1000余个，抓获犯罪嫌疑人8200余名。', shenlun: '论点：常态化扫黑除恶，守护群众安全感。对策：露头就打、深挖保护伞、健全源头治理长效机制。', security: '扫黑除恶是治安学核心实务领域，也是公安专业科目和申论高频考点。' },
+    { source: '最高检/公安部', tag: '法治', title: '两部门联合规范未成年人严重暴力犯罪核准追诉案件办理', summary: '联合发布已满十二周岁不满十四周岁未成年人严重暴力犯罪核准追诉案件规定，完善司法保护与追责衔接。', shenlun: '论点：依法惩戒与教育挽救并重，完善未成年人司法保护。对策：精准适用追诉程序、强化帮教矫治、推动家校社协同。', security: '未成年人犯罪治理是治安管理、社区警务重点，体现法治中国建设要求。' }
+  ]
+};
+let dailyNewsData = DAILY_NEWS_FALLBACK;
+
+function loadDailyNews() {
+  const remoteUrl = data.settings.dailyNewsUrl || 'daily-news.json';
+  fetch(remoteUrl, { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
+    .then(json => {
+      if (json && json.items && json.items.length) {
+        dailyNewsData = json;
+      }
+      renderDailyNews();
+    })
+    .catch(() => {
+      dailyNewsData = DAILY_NEWS_FALLBACK;
+      renderDailyNews();
+    });
+}
+
+function renderDailyNews() {
+  const dateEl = document.getElementById('dailyDate');
+  const itemsEl = document.getElementById('dailyItems');
+  if (!dateEl || !itemsEl) return;
+  dateEl.textContent = `${dailyNewsData.date} · 更新于 ${dailyNewsData.updated || ''}`;
+  if (!dailyNewsData.items || !dailyNewsData.items.length) {
+    itemsEl.innerHTML = '<div class="daily-empty">今日暂无简报，明天再来看看</div>';
+    return;
+  }
+  itemsEl.innerHTML = dailyNewsData.items.map((it, i) => `
+    <div class="daily-item" id="daily-${i}">
+      <div class="daily-item-head" onclick="toggleDailyItem(${i})">
+        <span class="daily-item-tag">${it.tag || '时政'}</span>
+        <span class="daily-item-title">${it.title}</span>
+      </div>
+      <div class="daily-item-body">
+        <div class="daily-item-body-inner">
+          <div class="dline">${it.summary || ''}</div>
+          <div class="dline"><span class="dlabel">📝 申论转化：</span>${it.shenlun || ''}</div>
+          <div class="dline"><span class="dlabel sec">🚔 治安关联：</span>${it.security || ''}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDaily() {
+  const items = document.getElementById('dailyItems');
+  if (items) items.style.display = items.style.display === 'none' ? '' : 'none';
+  const arrow = document.getElementById('dailyArrow');
+  if (arrow) arrow.textContent = arrow.textContent === '▼' ? '▲' : '▼';
+}
+
+function toggleDailyItem(i) {
+  const el = document.getElementById('daily-' + i);
+  if (el) el.classList.toggle('open');
+}
+
+// ═══════════════ INIT ═══════════════
+function init() {
+  loadData();
+  renderAll();
+  updateStreak();
+  updateDate();
+  loadSettings();
+  loadDailyNews();
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('jingtu_ai_data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      data = { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...parsed };
+      // merge nested objects properly
+      data.moduleHours = { ...DEFAULT_DATA.moduleHours, ...(parsed.moduleHours || {}) };
+      data.dailyLog = parsed.dailyLog || {};
+      data.reviews = parsed.reviews || [];
+      data.settings = { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) };
+    }
+  } catch(e) { console.error('Load error:', e); }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('jingtu_ai_data', JSON.stringify(data));
+  } catch(e) { console.error('Save error:', e); }
+}
+
+// ═══════════════ RENDER ALL ═══════════════
+function renderAll() {
+  renderHome();
+  renderChecklist();
+  renderReviews();
+  renderStats();
+}
+
+function renderHome() {
+  // time ring
+  const thisWeek = getWeekKey();
+  const weekHours = getWeekHours(thisWeek);
+  const pct = Math.min(100, Math.round((weekHours / 7) * 100));
+  document.getElementById('timeRing').style.setProperty('--pct', Math.round(pct * 3.6));
+  document.getElementById('ringHours').textContent = weekHours.toFixed(1);
+  
+  // time detail
+  const today = getDateKey();
+  const todayLog = data.dailyLog[today];
+  const todayDone = todayLog ? Object.values(todayLog.items || {}).filter(v => v).length : 0;
+  document.getElementById('timeDetail').innerHTML = 
+    `本周投入 <strong>${weekHours.toFixed(1)}h</strong> / 7h 目标<br>今日完成 <strong id="todayDone">${todayDone}</strong> / <strong id="todayTotal">${DAILY_ITEMS.length}</strong> 项`;
+
+  // module tiles
+  const tiles = document.getElementById('moduleTiles');
+  tiles.innerHTML = MODULES.map(m => {
+    const h = data.moduleHours[m.id] || 0;
+    const wpct = m.goal > 0 ? Math.min(100, Math.round((h / m.goal) * 100)) : 0;
+    return `<div class="module-tile">
+      <div class="mod-name">${m.name}</div>
+      <div class="mod-sub">${h.toFixed(1)}h / ${m.goal}h · ${m.sub}</div>
+      <div class="mod-bar"><div class="mod-fill ${m.cls}" style="width:${wpct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderChecklist() {
+  const today = getDateKey();
+  const todayLog = data.dailyLog[today] || { items: {}, note: '' };
+  document.getElementById('checkDate').textContent = `📅 ${today}`;
+  
+  const container = document.getElementById('checklistContainer');
+  container.innerHTML = DAILY_ITEMS.map(item => {
+    const done = todayLog.items[item.id] || false;
+    return `<div class="check-item${done ? ' done' : ''}" onclick="toggleCheck('${item.id}')">
+      <div class="check-box">${done ? '✓' : ''}</div>
+      <div class="check-info">
+        <div class="check-name">${item.name}</div>
+        <div class="check-desc">${item.desc}</div>
+      </div>
+      <div class="check-time">${item.time}</div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('dailyNote').value = todayLog.note || '';
+}
+
+function renderReviews() {
+  const container = document.getElementById('reviewHistory');
+  if (data.reviews.length === 0) {
+    container.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:20px">还没有复盘记录，开始你的第一次周复盘吧 👆</div>';
+    return;
+  }
+  container.innerHTML = [...data.reviews].reverse().map((r, i) => `
+    <div class="review-entry">
+      <div class="rev-date">📅 第${data.reviews.length - i}次复盘 · ${r.date}</div>
+      <div class="rev-text"><strong>时间分配：</strong>${r.q1}</div>
+      <div class="rev-text"><strong>未完成：</strong>${r.q2}</div>
+      <div class="rev-text"><strong>下周调整：</strong>${r.q3}</div>
+    </div>
+  `).join('');
+}
+
+function renderStats() {
+  document.getElementById('statStreak').textContent = data.streak;
+  document.getElementById('statTotalH').textContent = data.totalHours.toFixed(1);
+  document.getElementById('statTasks').textContent = data.totalCompleted;
+
+  // module stats
+  const msContainer = document.getElementById('moduleStats');
+  msContainer.innerHTML = MODULES.map(m => {
+    const h = data.moduleHours[m.id] || 0;
+    const pct = Math.min(100, Math.round((h / Math.max(0.1, data.totalHours || 0.1)) * 100));
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <div style="width:80px;font-size:13px;font-weight:600">${m.name.split(' ')[0]}</div>
+      <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div class="mod-fill ${m.cls}" style="width:${pct}%;height:100%"></div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);width:40px;text-align:right">${h.toFixed(1)}h</div>
+    </div>`;
+  }).join('');
+
+  // heatmap (last 7 days)
+  const heatmap = document.getElementById('heatmap');
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dk = getDateKey(d);
+    const log = data.dailyLog[dk];
+    const count = log ? Object.values(log.items || {}).filter(v => v).length : 0;
+    const intensity = count === 0 ? 'var(--border)' : 
+                      count <= 2 ? 'rgba(233,69,96,.3)' : 
+                      count <= 3 ? 'rgba(233,69,96,.6)' : 'var(--accent)';
+    html += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="width:28px;height:28px;border-radius:6px;background:${intensity};font-size:10px;display:flex;align-items:center;justify-content:center;color:${count>0?'#fff':'var(--text2)'}">${count}</div>
+      <div style="font-size:10px;color:var(--text2)">${dk.slice(5)}</div>
+    </div>`;
+  }
+  heatmap.innerHTML = html;
+}
+
+// ═══════════════ ACTIONS ═══════════════
+function toggleCheck(itemId) {
+  const today = getDateKey();
+  if (!data.dailyLog[today]) data.dailyLog[today] = { items: {}, note: '' };
+  
+  const wasDone = data.dailyLog[today].items[itemId] || false;
+  data.dailyLog[today].items[itemId] = !wasDone;
+  
+  if (!wasDone) {
+    data.totalCompleted++;
+    // add approximate hours
+    const item = DAILY_ITEMS.find(i => i.id === itemId);
+    if (item) {
+      const mod = MODULES.find(m => m.id === item.module);
+      const h = parseFloat(item.time) / 60; // convert minutes to hours
+      data.moduleHours[item.module] = (data.moduleHours[item.module] || 0) + h;
+      data.totalHours += h;
+    }
+  } else {
+    data.totalCompleted = Math.max(0, data.totalCompleted - 1);
+    const item = DAILY_ITEMS.find(i => i.id === itemId);
+    if (item) {
+      const h = parseFloat(item.time) / 60;
+      data.moduleHours[item.module] = Math.max(0, (data.moduleHours[item.module] || 0) - h);
+      data.totalHours = Math.max(0, data.totalHours - h);
+    }
+  }
+  
+  updateStreak();
+  saveData();
+  renderAll();
+  updateReminderBanner();
+  reminderDismissed = false;
+}
+
+function saveDailyNote() {
+  const today = getDateKey();
+  if (!data.dailyLog[today]) data.dailyLog[today] = { items: {}, note: '' };
+  data.dailyLog[today].note = document.getElementById('dailyNote').value;
+  saveData();
+}
+
+function updateStreak() {
+  const today = getDateKey();
+  const yesterday = getDateKey(new Date(Date.now() - 86400000));
+  
+  const todayLog = data.dailyLog[today];
+  const todayDone = todayLog ? Object.values(todayLog.items || {}).filter(v => v).length : 0;
+  
+  if (todayDone >= 3 && data.lastCheckDate !== today) {
+    if (data.lastCheckDate === yesterday) {
+      data.streak++;
+    } else if (data.lastCheckDate !== today) {
+      data.streak = 1;
+    }
+    data.lastCheckDate = today;
+  }
+  document.getElementById('streakDays').textContent = data.streak;
+  saveData();
+}
+
+function saveReview() {
+  const q1 = document.getElementById('revQ1').value.trim();
+  const q2 = document.getElementById('revQ2').value.trim();
+  const q3 = document.getElementById('revQ3').value.trim();
+  if (!q1 && !q2 && !q3) { toast('请至少填写一项'); return; }
+  
+  data.reviews.push({
+    date: getDateKey(),
+    q1, q2, q3
+  });
+  saveData();
+  clearReview();
+  renderReviews();
+  toast('✅ 周复盘已保存！');
+}
+
+function clearReview() {
+  document.getElementById('revQ1').value = '';
+  document.getElementById('revQ2').value = '';
+  document.getElementById('revQ3').value = '';
+}
+
+// ═══════════════ NAVIGATION ═══════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-page="${tab}"]`);
+  if (navItem) navItem.classList.add('active');
+  
+  if (tab === 'home' || tab === 'stats') renderAll();
+  if (tab === 'checklist') renderChecklist();
+  if (tab === 'review') renderReviews();
+  if (tab === 'settings') loadSettings();
+  if (tab === 'knowledge') renderKnowledge();
+  if (tab === 'home') { reminderDismissed = false; updateReminderBanner(); }
+  
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════ KNOWLEDGE BASE ═══════════════
+const KNOWLEDGE_TOPICS = [
+  {
+    id: 'edu15',
+    icon: '🎓',
+    title: '教育十五五：你的四年政策地图',
+    tag: '宏观',
+    cards: [
+      { title: '卡片 1：教育十五五是什么', body: `<p><strong>全称</strong>：《教育发展"十五五"规划》(2026-2030)</p>
+<p><strong>发布时间</strong>：2026年6月29日（距你入学不到一个月）</p>
+<p><strong>核心目标</strong>：到2030年，教育强国建设取得显著成效，<strong>高质量教育体系基本建成</strong></p>
+<p><strong>与你的关系</strong>：规划覆盖你的整个大学周期（2026入学 → 2030毕业）</p>` },
+      { title: '卡片 2：五大方面 + 23项重点任务 + 15个重大工程', body: `<table>
+<thead>
+<tr>
+<th>五大方面</th>
+<th>与你最相关的要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 塑造立德树人新格局</td>
+<td>国家安全教育、宪法法治教育进课堂 ← 你的专业直接受益</td>
+</tr>
+<tr>
+<td>② 强化教育对科技和人才的支撑</td>
+<td>"双一流"扩招10万、职业本科扩招、交叉学科 ← 学历路径拓宽</td>
+</tr>
+<tr>
+<td>③ 全面提升教育公共服务质量</td>
+<td>高校毕业生就业扩容 ← 入警率有保障</td>
+</tr>
+<tr>
+<td>④ 培养造就高水平教师队伍</td>
+<td>警校师资可能升级</td>
+</tr>
+<tr>
+<td>⑤ 扩大高水平教育对外开放</td>
+<td>港校资源向大湾区开放</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 3：两个最重要的时代变量', body: `<blockquote>
+<p>专家原话：教育十五五是"在人口结构性变化 + 人工智能颠覆性影响两大变量下制定的"</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>对你意味着什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>人口结构变化</strong></td>
+<td>学龄人口减少 → 高等教育资源更充裕 → 学历贬值加速 → 证书+技能是真正的竞争力</td>
+</tr>
+<tr>
+<td><strong>AI颠覆</strong></td>
+<td>"人工智能全学段教育" → 每一个专业都会被AI改造 → 不学AI的警校生 = 未来不会用警务系统的警察</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 4：大湾区"世界区域性高等教育中心"', body: `<blockquote>
+<p>原文："支持京津冀、长三角、<strong>粤港澳大湾区</strong>加快打造<strong>世界区域性高等教育中心</strong>"</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>你的地缘红利</th>
+<th>具体机会</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>港大（深圳）</td>
+<td>暑期课程、学术讲座可能对外开放</td>
+</tr>
+<tr>
+<td>港中文（深圳）</td>
+<td>硕博项目增加，可能设警务相关方向</td>
+</tr>
+<tr>
+<td>港科大（广州）</td>
+<td>AI + 智慧城市方向，与警务科技交叉</td>
+</tr>
+<tr>
+<td>广东省内警校</td>
+<td>与港澳警察学院交流合作将增多</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 5：四个直接影响你毕业去向的制度变化', body: `<table>
+<thead>
+<tr>
+<th>制度</th>
+<th>内容</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>就业红黄牌制度</strong></td>
+<td>"高校毕业生就业红黄牌提示制度"</td>
+<td>公安类=绿牌，但会有更多人知道→竞争加剧</td>
+</tr>
+<tr>
+<td><strong>专业调整加速</strong></td>
+<td>"创新学科专业目录管理机制，缩短调整周期"</td>
+<td>治安学课程体系可能更新，加入更多AI/技术内容</td>
+</tr>
+<tr>
+<td><strong>证书含金量上升</strong></td>
+<td>"学历证书+若干职业技能证书"制度推广</td>
+<td>法考/六级/技能证 &gt; 只有毕业证</td>
+</tr>
+<tr>
+<td><strong>研究生扩招</strong></td>
+<td>"大力发展专业学位研究生教育"</td>
+<td>警务硕士方向可能新增，给大四多一条路</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 6：AI+教育的三条硬规定', body: `<p>教育十五五对AI不是"建议"而是"规定"：</p>
+<ol>
+<li><strong>"人工智能全学段教育"</strong>——所有学段所有专业都要融入AI</li>
+<li><strong>"人工智能+教育"行动</strong>——教学方式、考试方式、科研方式全链条变革</li>
+<li><strong>国家人工智能（教育）应用中试基地</strong>——AI教育的基础设施</li>
+</ol>
+<blockquote>
+<p>你在大一就开始用AI做思维导图、分析热点，等于在教育十五五到来之前抢跑了半年。</p>
+</blockquote>` },
+      { title: '卡片 7："学科交叉融合"——你的新机会', body: `<blockquote>
+<p>"启动国家交叉学科中心建设" + "深化新文科建设"</p>
+</blockquote>
+<p>新文科 = 传统文科 × 数字技术。治安学作为法学+公安学的交叉学科，叠加AI后可以演化出：</p>
+<ul>
+<li><strong>数字治安</strong>（大数据 + 治安管理）</li>
+<li><strong>AI执法辅助</strong>（人工智能 + 执法决策）</li>
+<li><strong>跨境警务数据合规</strong>（法学 + 数据安全 + 粤港澳大湾区）</li>
+</ul>
+<p>这些方向目前是<strong>极少有人涉足的蓝海</strong>。</p>` },
+      { title: '卡片 8：高校毕业生就业「四个新动作」', body: `<table>
+<thead>
+<tr>
+<th>政策动作</th>
+<th>具体内容</th>
+<th>你该做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>就业扩容提质</strong></td>
+<td>稳定机关事业单位招录</td>
+<td>公安联考通道有保障</td>
+</tr>
+<tr>
+<td><strong>就业公共服务进校园</strong></td>
+<td>就业指导前置化</td>
+<td>大二开始就用学校的就业指导资源</td>
+</tr>
+<tr>
+<td><strong>就业能力提升"双千"计划</strong></td>
+<td>培训+实习</td>
+<td>关注警校提供的技能培训名额</td>
+</tr>
+<tr>
+<td><strong>创业带动就业</strong></td>
+<td>创业支持</td>
+<td>如果有创业想法，警校也有创业孵化</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 9：你的四年与教育十五五的时间线对照', body: `<table>
+<thead>
+<tr>
+<th>年份</th>
+<th>教育十五五进度</th>
+<th>你的进度</th>
+<th>关键动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026</td>
+<td>规划发布（6月）</td>
+<td>大一入学（9月）</td>
+<td>AI工具上手、四级报名</td>
+</tr>
+<tr>
+<td>2027</td>
+<td>各项工程启动</td>
+<td>大一下→大二上</td>
+<td>四级通过、六级准备</td>
+</tr>
+<tr>
+<td>2028</td>
+<td>职业本科扩招见效</td>
+<td>大二下→大三上</td>
+<td>法考准备、证书积累</td>
+</tr>
+<tr>
+<td>2029</td>
+<td>高质量教育体系"基本建成"前夜</td>
+<td>大三下→大四上</td>
+<td>联考备考</td>
+</tr>
+<tr>
+<td>2030</td>
+<td>教育十五五收官 / 2030目标验收</td>
+<td>大四下→毕业</td>
+<td>联考出分、精准选岗</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 10：一句话总结 + 行动清单', body: `<blockquote>
+<p><strong>教育十五五的核心信号：学历在贬值，AI在重塑教育，大湾区在崛起，个人能力包（专业+证书+AI+英语）才是硬通货。</strong></p>
+</blockquote>
+<h3>快速行动清单（每次迷茫时回来对一下）</h3>
+<ul>
+<li>[ ] AI工具已上手，每周至少用一次</li>
+<li>[ ] 四级已报名 / 已通过 / 六级已准备</li>
+<li>[ ] 知道"法考"什么时候可以报、怎么准备</li>
+<li>[ ] 关注了至少一个港校资源渠道</li>
+<li>[ ] 每周日在警途AI做了复盘</li>
+<li>[ ] 知道教育十五五2030年收官 = 你毕业那年</li>
+</ul>
+<hr />
+<p><em>知识点来源：国发〔2026〕19号《教育发展"十五五"规划》全文、央视新闻2026年6月29日专家解读、教育部负责人答记者问（2026年6月29日）</em></p>` },
+    ]
+  },
+  {
+    id: 'shenlun',
+    icon: '📝',
+    title: '申论渐进训练：大一→大四全路径',
+    tag: '申论',
+    cards: [
+      { title: '卡片 1：申论不是玄学——三条铁律', body: `<table>
+<thead>
+<tr>
+<th>铁律</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>80%答案在材料里</strong></td>
+<td>小题答案几乎全部来自材料，不是你自己想出来的</td>
+</tr>
+<tr>
+<td><strong>得分靠要点，不靠文采</strong></td>
+<td>阅卷人按点给分，一个点2-3分，写对就得分</td>
+</tr>
+<tr>
+<td><strong>大作文也是客观题</strong></td>
+<td>总论点和分论点都来自材料，不是你自由发挥</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>理解这三条，你就从"申论靠命"变成了"申论靠练"。</p>
+</blockquote>` },
+      { title: '卡片 2：五大题型速查表', body: `<table>
+<thead>
+<tr>
+<th>题型</th>
+<th>识别关键词</th>
+<th>答案来源</th>
+<th>核心技巧</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>归纳概括</td>
+<td>"概括""归纳""概述""简述"</td>
+<td>100%材料</td>
+<td>找材料中的总括词，没有就找上级概念</td>
+</tr>
+<tr>
+<td>提出对策</td>
+<td>"对策""建议""措施""办法"</td>
+<td>80%材料+20%推理</td>
+<td>材料有对策就抄，没有就问题反推</td>
+</tr>
+<tr>
+<td>综合分析</td>
+<td>"分析""理解""评析""看法"</td>
+<td>70%材料+30%逻辑</td>
+<td>"是什么→为什么→怎么办"三段式</td>
+</tr>
+<tr>
+<td>贯彻执行</td>
+<td>"写一份""拟一份""起草"</td>
+<td>材料内容+格式模板</td>
+<td>格式分4-6分，先保格式再填内容</td>
+</tr>
+<tr>
+<td>大作文</td>
+<td>"写一篇文章""自选角度"</td>
+<td>60%材料+40%积累</td>
+<td>总论点→2-3分论点→材料案例→升华</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 3：小题精做四步法', body: `<pre><code>审题 → 读材料 → 提炼 → 分条书写
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 审题</td>
+<td>圈出：问题方向/字数/身份定位</td>
+<td>红笔</td>
+</tr>
+<tr>
+<td>② 读材料</td>
+<td>问题类〰️ / 对策类—— / 原因类○</td>
+<td>三种标记</td>
+</tr>
+<tr>
+<td>③ 提炼</td>
+<td>去例子+去修饰词，保留主谓宾</td>
+<td>草稿纸</td>
+</tr>
+<tr>
+<td>④ 分条</td>
+<td>序号+动词开头+关键词齐全</td>
+<td>答题卡</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 4：每道小题做三遍', body: `<table>
+<thead>
+<tr>
+<th>遍次</th>
+<th>方式</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第1遍</td>
+<td>闭卷限时</td>
+<td>模拟真实作答</td>
+</tr>
+<tr>
+<td>第2遍</td>
+<td>开卷对照材料</td>
+<td>找到遗漏的得分点</td>
+</tr>
+<tr>
+<td>第3遍</td>
+<td>不看材料默写</td>
+<td>强化记忆+练习规范表达</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>做完必须对照答案，用红笔标出遗漏关键词，抄入"关键词本"。</p>
+</blockquote>` },
+      { title: '卡片 5：大作文结构模板', body: `<pre><code>第1段：现象/背景 → 引出总论点（2-3句）
+第2段：分论点1 + 材料案例 + 分析（6-8句）
+第3段：分论点2 + 自身积累 + 分析（6-8句）  
+第4段：分论点3（可选）+ 升华总结（3-4句）
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>要素</th>
+<th>来源</th>
+<th>占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总论点</td>
+<td>材料最后一段或题干</td>
+<td>定方向</td>
+</tr>
+<tr>
+<td>分论点</td>
+<td>材料中2-3个层面</td>
+<td>搭骨架</td>
+</tr>
+<tr>
+<td>案例</td>
+<td>材料内为主 + 自身积累为辅</td>
+<td>填血肉</td>
+</tr>
+<tr>
+<td>升华</td>
+<td>回扣总论点，展望</td>
+<td>升高度</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ 绝对不要背整篇范文然后硬套！只背"功能句"，主体内容从材料来。</p>
+</blockquote>` },
+      { title: '卡片 6：200个高频公文词汇（入门精选20个）', body: `<h3>动词类（10个）</h3>
+<table>
+<thead>
+<tr>
+<th>词汇</th>
+<th>用法示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>统筹</td>
+<td>统筹城乡发展、统筹安全与生产</td>
+</tr>
+<tr>
+<td>健全</td>
+<td>健全长效机制、健全防控体系</td>
+</tr>
+<tr>
+<td>压实</td>
+<td>压实主体责任、压实工作责任</td>
+</tr>
+<tr>
+<td>倒逼</td>
+<td>倒逼产业升级、倒逼改革深化</td>
+</tr>
+<tr>
+<td>赋能</td>
+<td>数字赋能、科技赋能基层治理</td>
+</tr>
+<tr>
+<td>下沉</td>
+<td>资源下沉、力量下沉到一线</td>
+</tr>
+<tr>
+<td>打通</td>
+<td>打通堵点痛点、打通最后一公里</td>
+</tr>
+<tr>
+<td>强化</td>
+<td>强化源头治理、强化监督检查</td>
+</tr>
+<tr>
+<td>深化</td>
+<td>深化改革、深化协同联动</td>
+</tr>
+<tr>
+<td>推进</td>
+<td>推进高质量发展、推进法治建设</td>
+</tr>
+</tbody>
+</table>
+<h3>名词类（10个）</h3>
+<table>
+<thead>
+<tr>
+<th>词汇</th>
+<th>用法示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>长效机制</td>
+<td>建立健全长效机制</td>
+</tr>
+<tr>
+<td>多元共治</td>
+<td>构建多元共治格局</td>
+</tr>
+<tr>
+<td>网格化</td>
+<td>网格化管理、精细化服务</td>
+</tr>
+<tr>
+<td>最后一公里</td>
+<td>打通政策落实最后一公里</td>
+</tr>
+<tr>
+<td>责任链条</td>
+<td>压紧压实责任链条</td>
+</tr>
+<tr>
+<td>闭环管理</td>
+<td>形成全流程闭环管理</td>
+</tr>
+<tr>
+<td>源头治理</td>
+<td>加强矛盾纠纷源头治理</td>
+</tr>
+<tr>
+<td>动态监测</td>
+<td>建立动态监测预警机制</td>
+</tr>
+<tr>
+<td>基层治理</td>
+<td>提升基层治理能力</td>
+</tr>
+<tr>
+<td>民生保障</td>
+<td>兜牢民生保障底线</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>每周记5个，40周 = 200个。在写答案时有意识地使用这些词。</p>
+</blockquote>` },
+      { title: '卡片 7：申论关键词本格式', body: `<pre><code>═══════════════════════════
+📅 日期：2026.9.5
+📰 来源：人民日报评论《XXX》
+═══════════════════════════
+摘录动词：统筹、压实、健全、倒逼
+摘录名词：基层治理、责任链条、多元共治
+摘录搭配：强化源头治理、打通最后一公里
+遗漏关键词（做题后补充）：
+  - 错题来源：2022国考申论第1题
+  - 遗漏词：动态监测、精准施策
+═══════════════════════════
+</code></pre>
+<blockquote>
+<p>格式不重要，坚持记才是核心。一年后这本本就是你的申论"弹药库"。</p>
+</blockquote>` },
+      { title: '卡片 8：推荐资源速查', body: `<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>资源</th>
+<th>用途</th>
+<th>什么阶段用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📖 教材</td>
+<td>《申论的规矩》（粉笔）</td>
+<td>题型方法论</td>
+<td>大二</td>
+</tr>
+<tr>
+<td>📝 刷题</td>
+<td>《决战申论100题》</td>
+<td>分题型练习</td>
+<td>大二-大三</td>
+</tr>
+<tr>
+<td>🎥 网课</td>
+<td>李梦圆/黄高山/蒋春旭</td>
+<td>方法论入门</td>
+<td>大二</td>
+</tr>
+<tr>
+<td>📰 日常</td>
+<td>人民日报评论</td>
+<td>每天阅读</td>
+<td>大一-大四</td>
+</tr>
+<tr>
+<td>📱 工具</td>
+<td>粉笔App</td>
+<td>AI批改+时政</td>
+<td>大二-大四</td>
+</tr>
+<tr>
+<td>🏛️ 素材</td>
+<td>学习强国App</td>
+<td>政策积累</td>
+<td>大一-大四</td>
+</tr>
+<tr>
+<td>📋 真题</td>
+<td>近5年国考/联考真题</td>
+<td>系统训练</td>
+<td>大三-大四</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 9：四个常见误区', body: `<table>
+<thead>
+<tr>
+<th>误区</th>
+<th>真相</th>
+<th>正确做法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"申论靠文采"</td>
+<td>申论靠要点覆盖率</td>
+<td>精简表达，关键词齐全 &gt; 文采飞扬</td>
+</tr>
+<tr>
+<td>"多背范文就能高分"</td>
+<td>硬套范文 = 偏题</td>
+<td>只背功能句，内容从材料来</td>
+</tr>
+<tr>
+<td>"大作文最重要"</td>
+<td>小题分值占70%</td>
+<td>潜心打磨小题，大作文保稳即可</td>
+</tr>
+<tr>
+<td>"大四再学来得及"</td>
+<td>申论需要长期积累</td>
+<td>大一建立语感，大四只是"激活"不是"从零学"</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 10：一句话总结 + 即日行动', body: `<blockquote>
+<p><strong>申论不是写作考试，是"材料处理能力"测试。80%的答案在材料里等你提取。从大一建立"申论语感"，到大四的"应试冲刺"，你比临时抱佛脚的人多出1000小时的低强度积累。</strong></p>
+</blockquote>
+<h3>今天就能做的三件事</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>行动</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>打开微信，关注「人民日报评论」公众号，读今天推送的第一篇文章</td>
+<td>10分钟</td>
+</tr>
+<tr>
+<td>2</td>
+<td>准备一个空白笔记本（或手机备忘录），在第一页写上"申论关键词本"，把卡片6里的20个词汇抄进去</td>
+<td>15分钟</td>
+</tr>
+<tr>
+<td>3</td>
+<td>下载粉笔App，浏览一下首页的"申论"栏目，先不用做题，只是熟悉一下界面</td>
+<td>10分钟</td>
+</tr>
+</tbody>
+</table>` },
+    ]
+  },
+  {
+    id: 'economy',
+    icon: '📊',
+    title: '广东经济半年报 × 申论素材',
+    tag: '数据',
+    cards: [
+      { title: '卡片 1：广东经济"总账本"（2026上半年）', body: `<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+<th>一句话解读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GDP总量</td>
+<td>72281亿元</td>
+<td>稳居全国第一，约等于一个中等国家全年GDP</td>
+</tr>
+<tr>
+<td>GDP增速</td>
+<td>+4.5%</td>
+<td>近三年同期最高，"稳中有进"</td>
+</tr>
+<tr>
+<td>第一产业</td>
+<td>2249亿，+3.8%</td>
+<td>农业基本盘稳定</td>
+</tr>
+<tr>
+<td>第二产业</td>
+<td>27328亿，+4.7%</td>
+<td>工业是增长主动力</td>
+</tr>
+<tr>
+<td>第三产业</td>
+<td>42705亿，+4.5%</td>
+<td>服务业与工业同步增长</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：广东以7.23万亿元的半年度GDP稳居全国经济第一大省，增速创三年同期新高，在"十五五"开局之年展现出强劲的经济韧性。</p>
+</blockquote>` },
+      { title: '卡片 2：制造业"新势力"数据', body: `<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>增速</th>
+<th>关键词</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规上工业增加值</td>
+<td>+5.8%</td>
+<td>工业基本盘</td>
+</tr>
+<tr>
+<td>先进制造业</td>
+<td>+6.9%（占57.2%）</td>
+<td>结构优化</td>
+</tr>
+<tr>
+<td>高技术制造业</td>
+<td>+11.1%（占35.8%）</td>
+<td>新质生产力</td>
+</tr>
+<tr>
+<td>电子信息</td>
+<td>+11.6%（贡献率56.9%）</td>
+<td>第一支柱</td>
+</tr>
+<tr>
+<td>汽车制造</td>
+<td>+9.9%</td>
+<td>第二大支柱</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：先进制造业占规上工业比重达57.2%，高技术制造业增速11.1%远超行业平均，"制造业当家"正在从战略走向实效。</p>
+</blockquote>` },
+      { title: '卡片 3：新质生产力"爆款产品"', body: `<table>
+<thead>
+<tr>
+<th>产品</th>
+<th>产量增速</th>
+<th>代表趋势</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>工业机器人</td>
+<td>+34.2%</td>
+<td>智能制造</td>
+</tr>
+<tr>
+<td>3D打印设备</td>
+<td>+51.8%</td>
+<td>增材制造</td>
+</tr>
+<tr>
+<td>集成电路</td>
+<td>+29.7%</td>
+<td>芯片自主</td>
+</tr>
+<tr>
+<td>新能源汽车</td>
+<td>+48.4%</td>
+<td>绿色转型</td>
+</tr>
+<tr>
+<td>锂离子电池</td>
+<td>+32.2%</td>
+<td>新能源产业链</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：工业机器人、新能源汽车等新质生产力代表产品产量增速超过30%，科技创新正成为广东经济增长的第一驱动力。</p>
+</blockquote>` },
+      { title: '卡片 4：外贸"压舱石"', body: `<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>进出口总额</td>
+<td>5.49万亿元</td>
+</tr>
+<tr>
+<td>同比增速</td>
+<td>+20.8%</td>
+</tr>
+<tr>
+<td>占全国比重</td>
+<td>21.6%</td>
+</tr>
+<tr>
+<td>对全国增量贡献</td>
+<td>25.6%</td>
+</tr>
+<tr>
+<td>深圳进出口</td>
+<td>2.88万亿（+33%，全国第一）</td>
+</tr>
+<tr>
+<td>深圳"新三样"出口</td>
+<td>667.8亿（+28.9%）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：广东外贸占全国21.6%，贡献全国外贸增量的四分之一，深圳以2.88万亿元的进出口额继续领跑全国，粤港澳大湾区外贸引擎作用持续凸显。</p>
+</blockquote>` },
+      { title: '卡片 5：21地市竞争力格局', body: `<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>TOP3</th>
+<th>数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GDP总量</td>
+<td>深圳、广州、东莞</td>
+<td>深圳1.98万亿/广州1.60万亿</td>
+</tr>
+<tr>
+<td>GDP增速</td>
+<td>梅州、云浮、中山</td>
+<td>梅州6.5%/云浮6.1%/中山6.0%</td>
+</tr>
+<tr>
+<td>规上工业增速</td>
+<td>云浮、韶关、梅州</td>
+<td>云浮18.4%/韶关11.9%/梅州10.6%</td>
+</tr>
+<tr>
+<td>固投增速</td>
+<td>韶关、东莞、广州</td>
+<td>韶关10.4%/东莞7.3%/广州6.1%</td>
+</tr>
+<tr>
+<td>消费增速</td>
+<td>清远、中山、韶关</td>
+<td>清远5.5%/中山4.8%</td>
+</tr>
+<tr>
+<td>外贸增速</td>
+<td>茂名、梅州、肇庆</td>
+<td>茂名77.5%/梅州46.4%/肇庆36.5%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：珠三角经济总量领先、粤东粤西粤北增速追赶的"双轨格局"正在形成，梅州以6.5%的GDP增速领跑全省，区域协调发展成果初步显现。</p>
+</blockquote>` },
+      { title: '卡片 6：消费与民生', body: `<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>社消零售总额增速</td>
+<td>+1.3%（偏低）</td>
+</tr>
+<tr>
+<td>居民人均可支配收入</td>
+<td>29667元，+4.7%</td>
+</tr>
+<tr>
+<td>城镇收入</td>
+<td>35358元，+4.2%</td>
+</tr>
+<tr>
+<td>农村收入</td>
+<td>15493元，+5.9%</td>
+</tr>
+<tr>
+<td>CPI</td>
+<td>+0.8%（温和）</td>
+</tr>
+<tr>
+<td>网络零售</td>
+<td>+8.3%</td>
+</tr>
+<tr>
+<td>通讯器材零售</td>
+<td>+33.3%</td>
+</tr>
+<tr>
+<td>新能源汽车零售</td>
+<td>+9.3%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：居民收入增长与经济增长基本同步，农村居民收入增速持续快于城镇，但社消零售仅增长1.3%，内需提振仍面临挑战。</p>
+</blockquote>` },
+      { title: '卡片 7：投资结构转型', body: `<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数据</th>
+<th>信号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固投总体</td>
+<td>-11.4%</td>
+<td>房地产深度调整</td>
+</tr>
+<tr>
+<td>房地产开发投资</td>
+<td>-21.6%</td>
+<td>去地产化加速</td>
+</tr>
+<tr>
+<td>设备工器具投资</td>
+<td>+22.4%</td>
+<td>大规模设备更新见效</td>
+</tr>
+<tr>
+<td>高技术产业投资</td>
+<td>+9.8%</td>
+<td>投资转向科技</td>
+</tr>
+<tr>
+<td>互联网投资</td>
+<td>+399.5%</td>
+<td>数字经济基建提速</td>
+</tr>
+<tr>
+<td>水利管理投资</td>
+<td>+15.6%</td>
+<td>基础设施补短板</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：固定资产投资结构正在发生深刻变化，房地产投资下降21.6%，但设备更新投资增长22.4%、高技术产业投资增长9.8%，"投科技、投实体、投未来"成为新趋势。</p>
+</blockquote>` },
+      { title: '卡片 8：各地市产业特色（选岗/申论双用途）', body: `<table>
+<thead>
+<tr>
+<th>城市</th>
+<th>产业特色</th>
+<th>未来方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>深圳</td>
+<td>电子信息+外贸+AI</td>
+<td>全球科创中心</td>
+</tr>
+<tr>
+<td>广州</td>
+<td>汽车+商贸+生物医药</td>
+<td>综合性门户</td>
+</tr>
+<tr>
+<td>东莞</td>
+<td>电子信息+具身智能机器人</td>
+<td>智造强市</td>
+</tr>
+<tr>
+<td>佛山</td>
+<td>家电+装备+具身智能</td>
+<td>制造业升级</td>
+</tr>
+<tr>
+<td>韶关</td>
+<td>大数据+算力枢纽</td>
+<td>数字经济</td>
+</tr>
+<tr>
+<td>阳江</td>
+<td>绿色能源+商业航天</td>
+<td>新兴产业城</td>
+</tr>
+<tr>
+<td>汕尾</td>
+<td>新能源+海洋经济</td>
+<td>滨海新城</td>
+</tr>
+<tr>
+<td>云浮</td>
+<td>钢铁+非金属矿+电子</td>
+<td>弯道超车</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：广东各地市立足自身禀赋差异化布局新兴产业，如韶关打造算力枢纽、阳江发力绿色能源与商业航天，"一市一品"的产业新格局正在加速成形。</p>
+</blockquote>` },
+      { title: '卡片 9：广东省考申论出题方向预测（基于半年报）', body: `<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>数据支撑</th>
+<th>概率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新质生产力与制造业当家</td>
+<td>先进制造57.2%、工业机器人+34.2%</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>百千万工程与区域协调</td>
+<td>梅州增速6.5%、11市增速快于全省</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>粤港澳大湾区建设</td>
+<td>外贸5.49万亿、深圳进出口全国第一</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>提振消费与扩大内需</td>
+<td>社消仅+1.3%、网络零售+8.3%</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>科技创新与自主可控</td>
+<td>集成电路+29.7%、高技术投资+9.8%</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>绿色低碳转型</td>
+<td>新能源汽车+48.4%、锂电池+32.2%</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td>数字经济</td>
+<td>互联网投资+399.5%、网络零售+8.3%</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 10：对警校生的特殊价值', body: `<table>
+<thead>
+<tr>
+<th>数据维度</th>
+<th>与公安/公共安全的关联</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产业结构转型</td>
+<td>传统制造业失业→社会治安压力→需提前研判</td>
+</tr>
+<tr>
+<td>新兴产业聚集</td>
+<td>高新技术园区→需要新型警务模式（智慧安防）</td>
+</tr>
+<tr>
+<td>外贸大省</td>
+<td>跨境犯罪、走私、数据安全→涉外警务需求增加</td>
+</tr>
+<tr>
+<td>区域发展不均</td>
+<td>粤东西北警务资源与珠三角差距→基层治理挑战</td>
+</tr>
+<tr>
+<td>数字经济</td>
+<td>网络诈骗、数据犯罪→网络安全警察需求暴增</td>
+</tr>
+<tr>
+<td>消费疲软</td>
+<td>经济压力→社会矛盾→基层警务维稳压力</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>申论一句话</strong>：广东经济的"向新向优"不仅意味着产业升级，也对公共安全治理提出新要求——智慧警务、跨境执法、基层治理等领域的公安人才需求将持续增长。</p>
+</blockquote>
+<hr />
+<p><em>数据来源：广东省统计局《2026年上半年广东经济运行简况》（2026.7.23）、广东21地市统计局半年报（截至2026.7.31）</em></p>` },
+    ]
+  },
+  {
+    id: 'aiPrompt',
+    icon: '🤖',
+    title: 'AI提示词：10分钟出一份规范公文',
+    tag: '工具',
+    cards: [
+      { title: '卡片 1：为什么"同一句话"给AI，效果天差地别', body: `<table>
+<thead>
+<tr>
+<th>你的提示词</th>
+<th>AI的理解</th>
+<th>产出质量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"写个总结"</td>
+<td>不知道什么总结、写给谁、什么风格</td>
+<td>空洞模板</td>
+</tr>
+<tr>
+<td>"你是基层派出所长，写2026年度总结，受众市局检查组，3000字，数据详实，用'一是二是三是'结构"</td>
+<td>完全清楚</td>
+<td>可直接用</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>核心原理</strong>：AI像刚入职的小白——你交代得越具体，他交的活越靠谱。</p>
+</blockquote>` },
+      { title: '卡片 2：万能提示词七要素', body: `<pre><code>角色设定  │ 你是一位资深的[具体职务]
+任务目标  │ 请帮我起草一份[文档类型]
+背景信息  │ 受众是[谁]，核心主题[什么]，可用数据[有哪些]
+关键要点  │ 必须包含[3-5点]
+风格要求  │ 语言[正式/务实]，层级[厅/处/科]，不用[口语词]
+输出格式  │ 分[几]部分，每部分[字数]，用[序号格式]
+限制条件  │ 不虚构数据、不添加资料外内容、不足处标[待补充]
+</code></pre>
+<blockquote>
+<p>七要素全填 = 金牌笔杆子级别；填3个 = 及格；填0个 = 浪费时间。</p>
+</blockquote>` },
+      { title: '卡片 3：公文写作三步法', body: `<pre><code>第1步：AI生成提纲 → 你确认结构
+第2步：你填入真实数据 → AI扩充段落
+第3步：AI润色语言 → 你通读定稿
+</code></pre>
+<blockquote>
+<p>❌ 一步出全文 = 赌博
+✅ 分三步走 = 可控、高质量</p>
+</blockquote>` },
+      { title: '卡片 4：分层提示词效果对比', body: `<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>举例</th>
+<th>AI表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🟤 初级</td>
+<td>"帮我写篇新闻稿"</td>
+<td>泛泛而谈，不可用</td>
+</tr>
+<tr>
+<td>🟡 中级</td>
+<td>加了角色+背景+字数</td>
+<td>基本可用，需大改</td>
+</tr>
+<tr>
+<td>🟢 高级</td>
+<td>七要素全 + 示例参考</td>
+<td>可直接用，仅微调</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>从初级到高级的差距不是"更长"，而是"给了AI足够的决策信息"。</p>
+</blockquote>` },
+      { title: '卡片 5：修改润色专用提示词', body: `<pre><code>你是一位资深政府机关文秘工作者。
+请对以下文章进行润色：
+- 拆分过长句子（每句不超过40字）
+- 减少重复表达
+- 加强段落衔接
+- 保留所有名称、时间、数据
+- 不改变原意，不添加新事实
+原文：[粘贴]
+</code></pre>
+<blockquote>
+<p>关键原则：<strong>说清楚"改什么"和"保住什么"</strong>。</p>
+</blockquote>` },
+      { title: '卡片 6：申论阅卷人模拟提示词', body: `<pre><code>你是公安联考申论阅卷人。请批改：
+1. 按得分点评分（每题25分）
+2. 指出遗漏的要点（具体到关键词）
+3. 对比参考答案的答题逻辑
+4. 给出改进建议（不超过3条）
+题目/我的答案/参考答案：[粘贴]
+</code></pre>
+<blockquote>
+<p>这是大二-大四最高频使用的提示词，相当于免费请了个申论私教。</p>
+</blockquote>` },
+      { title: '卡片 7："给参照系"技巧（比说"不要XX"有效100倍）', body: `<table>
+<thead>
+<tr>
+<th>❌ 无效指令</th>
+<th>✅ 有效指令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"别写得太空洞"</td>
+<td>"参照以下范文的语言密度和数据详实程度来写"</td>
+</tr>
+<tr>
+<td>"别太口语化"</td>
+<td>"用以下公文风格：动词开头、去修饰词、句长≤30字"</td>
+</tr>
+<tr>
+<td>"写高级一点"</td>
+<td>"模仿省厅年度工作报告的语言风格"</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>AI不懂"否定"，但懂"对齐"。给它一个参照系，比给它100条禁令都管用。</p>
+</blockquote>` },
+      { title: '卡片 8：五类功能型提示词速查', body: `<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>用途</th>
+<th>关键要素</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📝 起草类</td>
+<td>从零生成初稿</td>
+<td>主题+背景+重点+篇幅</td>
+</tr>
+<tr>
+<td>📋 提纲类</td>
+<td>先出结构，确认后再填内容</td>
+<td>主题+结构层级+每部分标注所需资料</td>
+</tr>
+<tr>
+<td>✂️ 修改润色</td>
+<td>优化已有内容</td>
+<td>允许改什么+不能改什么</td>
+</tr>
+<tr>
+<td>📏 压缩/扩写</td>
+<td>控制篇幅</td>
+<td>只根据资料补充，不推测</td>
+</tr>
+<tr>
+<td>🔍 检查类</td>
+<td>找错别字、病句、不一致</td>
+<td>按"原文→问题→建议"格式输出</td>
+</tr>
+</tbody>
+</table>` },
+      { title: '卡片 9：AI工具速查 + 安全红线', body: `<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>特点</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeepSeek</td>
+<td>国内免费、推理强</td>
+<td>申论批改、深度写作</td>
+</tr>
+<tr>
+<td>豆包</td>
+<td>免费、手机端好</td>
+<td>日常速查</td>
+</tr>
+<tr>
+<td>Kimi</td>
+<td>长文本</td>
+<td>读政策文件</td>
+</tr>
+<tr>
+<td>通义千问</td>
+<td>钉钉集成</td>
+<td>学校场景</td>
+</tr>
+</tbody>
+</table>
+<h3>🚨 安全红线（必读）</h3>
+<ul>
+<li>❌ <strong>绝对不传</strong>：涉密文件、内部数据、个人隐私（身份证号等）</li>
+<li>✅ <strong>可以传</strong>：公开政策、已发表评论文章、你自己的学习笔记</li>
+<li>⚠️ <strong>最后把关永远是人</strong>：AI生成的内容必须你亲自审核后才能用</li>
+</ul>` },
+      { title: '卡片 10：即日行动 + 一句话', body: `<h3>今天做这三件事：</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>行动</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>打开AI工具，用卡片2的七要素模板写一个完整的提示词，测试一次</td>
+<td>10分钟</td>
+</tr>
+<tr>
+<td>2</td>
+<td>在手机备忘录建"我的AI提示词库"，把卡片5-8存进去</td>
+<td>10分钟</td>
+</tr>
+<tr>
+<td>3</td>
+<td>找一篇人民日报评论，用卡片6的"申论阅卷人"模式让AI帮你提炼</td>
+<td>10分钟</td>
+</tr>
+</tbody>
+</table>
+<h3>一句话总结</h3>
+<blockquote>
+<p><strong>一个结构化提示词 = 你雇佣了一个免费的笔杆子助理。从现在大一开始练，四年后你不是"会写材料"，而是"会指挥AI写材料然后自己精修"——效率是同期的5倍以上。</strong></p>
+</blockquote>` },
+    ]
+  },
+  {
+    id: 'kaoyan',
+    icon: '🎓',
+    title: '公安学考研：赛道与每日准备',
+    tag: '考研',
+    cards: [
+      { title: '唯一正确赛道：公安学学硕', body: `<p>考<strong>公安学（学硕）</strong>，不考数学！警务硕士你报不了（需在职民警+2年警龄），且毕业不能参加公安联考。</p>` },
+      { title: '目标院校对比', body: `<p>公大(双一流)最难340-370压分 vs 刑警学院性价比高、给分宽松、刑侦王牌。你求稳选刑警学院。</p>` },
+      { title: '核心策略', body: `<p>联考保底+考研同步，绝不孤注一掷。省属警校考部属=平台质变，可冲市局/省厅。</p>` },
+      { title: '考试科目', body: `<p>政治+英语一+两门公安综合。英语一是硬骨头，大一就按考研标准打词汇量。</p>` },
+      { title: '每日任务', body: `<p>课堂3句话总结+精学1个法学/公安概念(15min)、背四级+考研词汇(20min)、读人民日报评论(15min)。</p>` },
+      { title: '大一重点', body: `<p>上=法理学+宪法学，下=公安学基础理论。这些既是本科主课又是考研初试科目，学一遍两用。</p>` },
+    ]
+  },
+];
+
+function renderKnowledge(filter = '') {
+  const container = document.getElementById('kbTopics');
+  const flt = filter.toLowerCase();
+  const topics = KNOWLEDGE_TOPICS.filter(t => {
+    if (!flt) return true;
+    return t.title.toLowerCase().includes(flt) || 
+           t.tag.toLowerCase().includes(flt) ||
+           t.cards.some(c => (c.title || '').toLowerCase().includes(flt) || (c.body || '').toLowerCase().includes(flt));
+  });
+  
+  container.innerHTML = topics.map(t => `
+    <div class="kb-topic" id="kb-${t.id}">
+      <div class="kb-topic-header" onclick="toggleKB('${t.id}')">
+        <span>${t.icon} ${t.title} <span class="kb-tag">${t.tag}</span></span>
+        <span class="kb-arrow">▼</span>
+      </div>
+      <div class="kb-topic-body">
+        ${t.cards.map((c, i) => {
+          const colorClass = c.cls || ['accent','gold','green','blue'][i % 4];
+          return `<div class="kb-card ${colorClass}" id="kbc-${t.id}-${i}">
+            <div class="kb-card-title" onclick="toggleKBCard('${t.id}',${i})">
+              <span>${c.title || '知识点'}</span>
+              <span class="kb-card-arrow">▼</span>
+            </div>
+            <div class="kb-card-body"><div class="kb-card-body-inner">${c.body || ''}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleKB(id) {
+  const el = document.getElementById('kb-' + id);
+  if (!el) return;
+  // Close others
+  document.querySelectorAll('.kb-topic.open').forEach(t => {
+    if (t.id !== 'kb-' + id) t.classList.remove('open');
+  });
+  el.classList.toggle('open');
+}
+
+function toggleKBCard(topicId, idx) {
+  const el = document.getElementById(`kbc-${topicId}-${idx}`);
+  if (el) el.classList.toggle('open');
+}
+
+function filterKnowledge() {
+  const q = document.getElementById('kbSearch').value;
+  renderKnowledge(q);
+  // Auto-expand matching topics and cards
+  if (q) {
+    document.querySelectorAll('.kb-topic').forEach(t => t.classList.add('open'));
+    document.querySelectorAll('.kb-card').forEach(c => c.classList.add('open'));
+  }
+}
+
+// ═══════════════ AI CHAT ═══════════════
+const SYSTEM_PROMPT = `你是「警途AI」——专为一名警校治安学专业大一新生打造的AI陪跑导师。
+
+## 用户基础信息
+- 身份：2026年入学警校大一新生，治安学专业
+- 背景：文科生（历政地），数学薄弱，社交能力好，关心国家政策，历史逻辑清晰
+- 核心短板：自律，克服不良诱惑
+- 电脑操作水平：入门级
+
+## 用户的一年目标
+1. 养成自律（锻炼身体、过CET-4、培养申论基础）
+2. 终极目标：公安联考前排名，以便更好选岗
+
+## 约束条件
+- 每周课余投入约7小时
+- 资金不限
+- 当前最大挑战：适应警校警务化管理
+
+## 公安联考信息（大四上学期考）
+- 行测（40%）：120分钟180题，机考，含知觉速度（8分钟60题，答错扣分）
+- 申论（30%）：150分钟，3小题+1大作文
+- 公安专业科目（30%）：120分钟100题
+- 体测一票否决：往返跑/1000米/纵跳摸高/引体向上
+
+## 五大模块规划（每周7h分配）
+1. 申论基础 2h/周：读人民日报评论+写短评
+2. 英语四级 2h/周：背单词+真题阅读
+3. 体能强化 1.5h/周：警校训练不摸鱼+额外力量
+4. 专业沉淀 1h/周：专业课思维导图
+5. 自律复盘 0.5h/周：周日晚上记录+调整
+
+## 回复规范
+- 每次回复控制在200字以内，精炼直接
+- 给出具体可执行的建议，不说空话
+- 结合警校生身份（警务化管理、集合、体能训练）给出针对性建议
+- 鼓励但不虚假打气，指出问题但不打击
+- 如果用户问具体操作，给出步骤
+- 用"师弟/师妹"或"你"称呼
+- 语气像一个大你几届的靠谱师兄`;
+
+let chatHistory = [];
+
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  sendQuick(msg);
+  input.value = '';
+}
+
+function sendQuick(msg) {
+  const messagesDiv = document.getElementById('chatMessages');
+  const placeholder = document.getElementById('chatPlaceholder');
+  if (placeholder) placeholder.style.display = 'none';
+  
+  // Add user message
+  messagesDiv.innerHTML += `<div class="msg user">${escapeHtml(msg)}</div>`;
+  
+  // Add typing indicator
+  const typingId = 'typing-' + Date.now();
+  messagesDiv.innerHTML += `<div class="msg ai" id="${typingId}"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  const apiKey = data.settings.apiKey;
+  
+  if (!apiKey) {
+    // No API key - use local response
+    setTimeout(() => {
+      document.getElementById(typingId).innerHTML = getLocalResponse(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, 1000 + Math.random() * 1500);
+    return;
+  }
+  
+  // Call API
+  callAI(msg).then(reply => {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) {
+      typingEl.innerHTML = escapeHtml(reply).replace(/\n/g, '<br>');
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  }).catch(err => {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) {
+      typingEl.innerHTML = '😅 连接失败了，请检查API Key或网络。你也可以先不填Key，我会用内置知识回答你。';
+    }
+  });
+}
+
+async function callAI(msg) {
+  const provider = data.settings.apiProvider;
+  const apiKey = data.settings.apiKey;
+  const model = data.settings.apiModel;
+  
+  let url, headers, body;
+  
+  if (provider === 'deepseek') {
+    url = 'https://api.deepseek.com/v1/chat/completions';
+    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    body = JSON.stringify({
+      model: model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...chatHistory.slice(-10),
+        { role: 'user', content: msg }
+      ],
+      max_tokens: 600,
+      temperature: 0.7
+    });
+  } else if (provider === 'openai') {
+    url = 'https://api.openai.com/v1/chat/completions';
+    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    body = JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...chatHistory.slice(-10),
+        { role: 'user', content: msg }
+      ],
+      max_tokens: 600,
+      temperature: 0.7
+    });
+  } else {
+    url = data.settings.customApiUrl;
+    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    body = JSON.stringify({
+      model: model || 'deepseek-chat',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...chatHistory.slice(-10),
+        { role: 'user', content: msg }
+      ],
+      max_tokens: 600,
+      temperature: 0.7
+    });
+  }
+  
+  const resp = await fetch(url, { method: 'POST', headers, body });
+  if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+  const json = await resp.json();
+  const reply = json.choices[0].message.content;
+  
+  chatHistory.push({ role: 'user', content: msg });
+  chatHistory.push({ role: 'assistant', content: reply });
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+  
+  return reply;
+}
+
+function getLocalResponse(msg) {
+  const lower = msg.toLowerCase();
+  
+  if (lower.includes('懒') || lower.includes('不想') || lower.includes('懈怠')) {
+    return '💡 <strong>正常，每个人都会</strong>。关键是别让"一天不学"变成"一周不学"。<br><br>试试 <strong>"2分钟启动法"</strong>：告诉自己只做2分钟——打开人民日报只看标题、背5个单词、做5个俯卧撑。做完了可以停。但你会发现，开始之后就不想停了。<br><br>记住：在警校，<strong>外部纪律已经帮你解决了80%的懒散</strong>。你只需要在那20%的自由时间里不滑坡。';
+  }
+  
+  if (lower.includes('申论') || lower.includes('评论') || lower.includes('写作')) {
+    return '📝 申论不需要等大三再准备。<strong>大一就能做、且性价比最高的事</strong>：<br><br>1️⃣ 每天1篇人民日报评论（5分钟）<br>2️⃣ 看完用嘴说出来：<strong>"这篇讲什么，凭什么这么说"</strong><br>3️⃣ 每周手写1篇300字短评<br><br>核心不是文采，是<strong>提取要点+逻辑组织</strong>。这个能力三年积累 vs 三个月突击，差距绝不是一点半点。';
+  }
+  
+  if (lower.includes('体能') || lower.includes('跑步') || lower.includes('引体') || lower.includes('体测')) {
+    return '💪 体测四项一票否决——练不好直接淘汰。<br><br><strong>利用警校已有训练做杠杆</strong>：<br>• 早操跑操不摸鱼，保持不掉队就是合格<br>• 体能课每组做到力竭（别人做10个你做15个）<br>• 引体向上：装一个宿舍门框单杠（30块钱），每天路过拉3个<br>• 睡前5分钟核心：平板支撑+卷腹<br><br>一年后你甩开的不只是体测线，还有面试时的精气神。';
+  }
+  
+  if (lower.includes('四级') || lower.includes('cet') || lower.includes('英语') || lower.includes('单词')) {
+    return '🇬🇧 CET-4对文科生来说<strong>阅读不是问题，听力和词汇量才是</strong>。<br><br><strong>警校生碎片时间多</strong>（集合前、饭后、睡前）：<br>• 墨墨背单词，每天30个，不要贪多<br>• 每周2套真题阅读（大一下开始）<br>• 听力：找四级真题音频，跑步时戴着听<br><br><strong>目标</strong>：大一下学期（6月）首考过425，冲击500+。时间完全够。';
+  }
+  
+  if (lower.includes('适应') || lower.includes('管理') || lower.includes('警务') || lower.includes('不习惯')) {
+    return '🏫 前三个月最难受，但熬过去就是常态。<br><br><strong>给你三个心态工具</strong>：<br>1️⃣ <strong>别问"凭什么"</strong>——警校不需要你的理由，只需要你的服从。越早接受越轻松。<br>2️⃣ <strong>把集合当锚点</strong>——利用集合绑定你想养成的习惯（集合后直接去跑步/看书，不回宿舍）<br>3️⃣ <strong>找1-2个志同道合的同学</strong>——警校最大的风险不是管得太严，而是身边人都"混日子"你跟着混。<br><br>记住那条知乎高赞回复：<strong>"不要与你的同学同流合污"</strong>。';
+  }
+  
+  if (lower.includes('复盘') || lower.includes('进展') || lower.includes('回顾')) {
+    const streak = data.streak;
+    const totalH = data.totalHours.toFixed(1);
+    const reviews = data.reviews.length;
+    return `📊 <strong>你的当前数据</strong>：<br>🔥 连续打卡 ${streak} 天<br>⏱️ 累计投入 ${totalH} 小时<br>📝 已完成 ${reviews} 次周复盘<br><br>${streak >= 7 ? '👏 连续7天+，自律系统已初步建立！继续保持。' : streak >= 3 ? '👍 起步不错，坚持过第一周是关键。' : '💡 才刚开始，别急。先完成今天的打卡再说话。'}`;
+  }
+  
+  return `👮 收到你的问题。我作为你的警途AI导师，已掌握你的全部规划背景（治安学大一/7h周/五大模块/公安联考目标）。
+
+<strong>简单说</strong>：你的每一点投入都在为四年后的联考积累优势。大多数人到大三暑假才开始准备，你已经抢跑了三年。
+
+有什么具体想聊的？申论、体能、英语、专业课、还是警校生活适应？也可以先去"打卡"页面完成今天的任务 ✨`;
+}
+
+// ═══════════════ SETTINGS ═══════════════
+function loadSettings() {
+  document.getElementById('apiProvider').value = data.settings.apiProvider || 'deepseek';
+  document.getElementById('apiKey').value = data.settings.apiKey || '';
+  document.getElementById('apiModel').value = data.settings.apiModel || 'deepseek-chat';
+  document.getElementById('customApiUrl').value = data.settings.customApiUrl || '';
+  
+  const customRow = document.getElementById('customUrlRow');
+  customRow.style.display = data.settings.apiProvider === 'custom' ? 'flex' : 'none';
+  
+  const hint = document.getElementById('apiKeyHint');
+  if (data.settings.apiProvider === 'deepseek') hint.textContent = '在 platform.deepseek.com 获取';
+  else if (data.settings.apiProvider === 'openai') hint.textContent = '在 platform.openai.com 获取';
+  else hint.textContent = '输入你的API地址和Key';
+}
+
+function saveSettings() {
+  data.settings.apiProvider = document.getElementById('apiProvider').value;
+  data.settings.apiKey = document.getElementById('apiKey').value;
+  data.settings.apiModel = document.getElementById('apiModel').value;
+  data.settings.customApiUrl = document.getElementById('customApiUrl').value;
+  
+  const customRow = document.getElementById('customUrlRow');
+  customRow.style.display = data.settings.apiProvider === 'custom' ? 'flex' : 'none';
+  
+  // Update model options
+  const modelSelect = document.getElementById('apiModel');
+  if (data.settings.apiProvider === 'openai') {
+    modelSelect.innerHTML = '<option value="gpt-3.5-turbo">gpt-3.5-turbo</option><option value="gpt-4o-mini">gpt-4o-mini</option>';
+  } else {
+    modelSelect.innerHTML = '<option value="deepseek-chat">deepseek-chat</option><option value="deepseek-reasoner">deepseek-reasoner (R1)</option>';
+  }
+  modelSelect.value = data.settings.apiModel;
+  
+  saveData();
+  toast('⚙️ 设置已保存');
+}
+
+// ═══════════════ DATA MANAGEMENT ═══════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `jingtu-ai-backup-${getDateKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 数据已导出');
+}
+
+function importDataPrompt() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        data = { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...imported };
+        data.moduleHours = { ...DEFAULT_DATA.moduleHours, ...(imported.moduleHours || {}) };
+        data.dailyLog = imported.dailyLog || {};
+        data.reviews = imported.reviews || [];
+        data.settings = { ...DEFAULT_DATA.settings, ...(imported.settings || {}) };
+        saveData();
+        renderAll();
+        updateStreak();
+        toast('📥 数据已导入');
+      } catch(e) {
+        toast('❌ 导入失败，文件格式有问题');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function resetAll() {
+  if (confirm('确定要重置所有数据吗？此操作不可恢复。建议先导出备份。')) {
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    localStorage.removeItem('jingtu_ai_data');
+    chatHistory = [];
+    renderAll();
+    updateStreak();
+    toast('⚠️ 已重置全部数据');
+  }
+}
+
+// ═══════════════ UTILITIES ═══════════════
+function getDateKey(d = new Date()) {
+  return d.toISOString().slice(0, 10);
+}
+
+function getWeekKey(d = new Date()) {
+  const day = d.getDay() || 7;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - day + 1);
+  return getDateKey(monday);
+}
+
+function getWeekHours(weekKey) {
+  let total = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekKey);
+    d.setDate(d.getDate() + i);
+    const dk = getDateKey(d);
+    const log = data.dailyLog[dk];
+    if (log && log.items) {
+      Object.entries(log.items).forEach(([id, done]) => {
+        if (done) {
+          const item = DAILY_ITEMS.find(it => it.id === id);
+          if (item) total += parseFloat(item.time) / 60;
+        }
+      });
+    }
+  }
+  return total;
+}
+
+function updateDate() {
+  document.getElementById('checkDate').textContent = `📅 ${getDateKey()}`;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+async function addToHomeScreen() {
+  // Android: try native PWA install prompt
+  if (typeof deferredPrompt !== 'undefined' && deferredPrompt) {
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') {
+      toast('✅ 已添加到桌面！');
+      return;
+    }
+  }
+  // iOS Safari: guide user
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (isIOS) {
+    toast('📲 点底部 Safari 分享按钮 → 往下滑 → "添加到主屏幕"');
+  } else {
+    toast('📲 浏览器菜单 → "添加到主屏幕"或"安装应用"');
+  }
+}
+
+// Service Worker for offline + caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swCode = `
+      const CACHE = 'jingtu-ai-v2';
+      const URLS = [self.location.href];
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open(CACHE).then(c => c.addAll(URLS)).catch(() => {})
+        );
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', e => {
+        e.waitUntil(self.clients.claim());
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(
+          caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+            if (resp.ok) {
+              const clone = resp.clone();
+              caches.open(CACHE).then(c => c.put(e.request, clone));
+            }
+            return resp;
+          }))
+        );
+      });
+    `;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(blob))
+      .then(() => console.log('SW registered'))
+      .catch(() => {});
+  });
+}
+
+// ── Install Prompt ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+window.promptInstall = async function() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    return result.outcome === 'accepted';
+  }
+  return false;
+};
+
+// ═══════════════ STARTUP ═══════════════
+init();
+
+// ── NOTIFICATION & REMINDER SYSTEM ──
+let notificationPermission = 'default';
+let reminderInterval = null;
+let reminderDismissed = false;
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    notificationPermission = 'granted';
+    return;
+  }
+  if (Notification.permission === 'denied') return;
+  
+  // Show custom prompt
+  const prompt = document.createElement('div');
+  prompt.className = 'notify-prompt';
+  prompt.id = 'notifyPrompt';
+  prompt.innerHTML = `
+    <div class="np-icon">🔔</div>
+    <div class="np-text">
+      <strong>开启通知提醒</strong><br>
+      每天定时提醒你完成打卡任务，不错过任何一天的积累
+      <div class="np-btns">
+        <button class="np-btn np-btn-allow" id="npAllow">✅ 开启</button>
+        <button class="np-btn np-btn-later" id="npLater">以后再说</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(prompt);
+  
+  document.getElementById('npAllow').onclick = () => {
+    Notification.requestPermission().then(perm => {
+      notificationPermission = perm;
+      if (perm === 'granted') showNotification('警途AI已就位', '每天会在固定时间提醒你打卡 📋');
+    });
+    prompt.remove();
+  };
+  document.getElementById('npLater').onclick = () => {
+    prompt.remove();
+  };
+}
+
+function showNotification(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (document.visibilityState === 'visible') return; // Don't notify if app is open
+  
+  navigator.serviceWorker.ready.then(reg => {
+    reg.showNotification(title, {
+      body,
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'jingtu-reminder',
+      requireInteraction: true
+    });
+  });
+}
+
+function updateReminderBanner() {
+  const today = getDateKey();
+  const todayLog = data.dailyLog[today];
+  const done = todayLog ? Object.values(todayLog.items || {}).filter(v => v).length : 0;
+  const total = DAILY_ITEMS.length;
+  const remaining = total - done;
+  
+  const banner = document.getElementById('reminderBanner');
+  const text = document.getElementById('reminderText');
+  
+  if (remaining === 0) {
+    banner.classList.remove('show');
+    reminderDismissed = false;
+    return;
+  }
+  
+  if (reminderDismissed) return;
+  
+  const hour = new Date().getHours();
+  const messages = [];
+  
+  if (remaining === total) {
+    messages.push(`🌅 新的一天，${total}项任务等着你`);
+  } else if (remaining > 2) {
+    messages.push(`⏳ 已完成${done}/${total}，还剩${remaining}项`);
+  } else if (remaining > 0) {
+    messages.push(`🔥 快完成了！只剩${remaining}项`);
+  }
+  
+  if (hour >= 20 && remaining > 0) {
+    messages.push(`🌙 晚间了，今天还有${remaining}项没完成`);
+  }
+  
+  text.textContent = messages[0] || `📋 今日进度 ${done}/${total}`;
+  banner.classList.add('show');
+}
+
+function dismissReminder() {
+  reminderDismissed = true;
+  document.getElementById('reminderBanner').classList.remove('show');
+  // Re-enable after 2 hours
+  setTimeout(() => { reminderDismissed = false; }, 7200000);
+}
+
+// Start periodic reminder checks
+function startReminderSystem() {
+  // Check every 30 minutes
+  updateReminderBanner();
+  reminderInterval = setInterval(() => {
+    updateReminderBanner();
+    checkEveningReminder();
+  }, 1800000); // 30 min
+  
+  // Request notification permission on first load (after 5s delay)
+  setTimeout(requestNotificationPermission, 5000);
+  
+  // Check for evening push at 20:00-22:00
+  checkEveningReminder();
+}
+
+function checkEveningReminder() {
+  const hour = new Date().getHours();
+  if (hour < 20 || hour > 22) return;
+  
+  const today = getDateKey();
+  const todayLog = data.dailyLog[today];
+  const done = todayLog ? Object.values(todayLog.items || {}).filter(v => v).length : 0;
+  
+  if (done < 3) {
+    showNotification('📋 晚间提醒', `今天只完成了${done}/5项打卡，还有时间！`);
+  }
+}
+
+startReminderSystem();
+
+// Auto-refresh streak at midnight
+const now = new Date();
+const msToMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+setTimeout(() => {
+  updateStreak();
+  renderAll();
+  setInterval(() => { updateStreak(); renderAll(); }, 86400000);
+}, msToMidnight + 60000);
+</script>
+</body>
+</html>
